@@ -2,9 +2,17 @@
 Evaluación de modelos con validación cruzada POR PERSONA.
 
 Todas las grabaciones de una misma persona quedan siempre en la misma partición
-(StratifiedGroupKFold). La estandarización y la búsqueda de hiperparámetros se
-hacen DENTRO de cada partición de entrenamiento, para evitar fuga de información
-(Kumar et al., 2026; sección 2.4 del documento).
+(StratifiedGroupKFold). La estandarización, la búsqueda de hiperparámetros y la
+elección del umbral de decisión se hacen DENTRO de cada partición de
+entrenamiento, para evitar fuga de información (Kumar et al., 2026; sección 2.4
+del documento).
+
+Umbral de decisión: con clases desbalanceadas (en UCI el 75 % de las grabaciones
+son de personas con Parkinson) un umbral fijo de 0.5 hace que casi todo se
+clasifique como Parkinson, aunque el modelo ordene bien a las personas (AUC
+alto). Por eso el umbral se elige en cada partición con predicciones fuera de
+partición sobre el conjunto de entrenamiento, maximizando la exactitud
+balanceada, y luego se aplica sin cambios a la partición de prueba.
 """
 
 import json
@@ -20,6 +28,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 from sklearn.base import clone
+from sklearn.calibration import CalibratedClassifierCV
 from sklearn.dummy import DummyClassifier
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import (
@@ -30,7 +39,7 @@ from sklearn.metrics import (
     recall_score,
     roc_auc_score,
 )
-from sklearn.model_selection import GridSearchCV, StratifiedGroupKFold
+from sklearn.model_selection import GridSearchCV, StratifiedGroupKFold, cross_val_predict
 from sklearn.neural_network import MLPClassifier
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
@@ -40,7 +49,7 @@ from sklearn.tree import DecisionTreeClassifier
 SEMILLA = 42
 PARTICIONES_EXTERNAS = 5
 PARTICIONES_INTERNAS = 3
-UMBRAL_DECISION = 0.5
+UMBRAL_POR_DEFECTO = 0.5
 
 
 def modelos() -> dict[str, tuple[Any, dict[str, list]]]:
@@ -55,9 +64,16 @@ def modelos() -> dict[str, tuple[Any, dict[str, list]]]:
             RandomForestClassifier(n_estimators=300, class_weight="balanced", random_state=SEMILLA),
             {"clf__max_depth": [3, 5, None], "clf__min_samples_leaf": [1, 3, 5]},
         ),
+        # SVC(probability=True) está obsoleto desde scikit-learn 1.9; la calibración
+        # explícita da el mismo resultado (escalado de Platt) y seguirá funcionando.
         "SVM (RBF)": (
-            SVC(kernel="rbf", probability=True, class_weight="balanced", random_state=SEMILLA),
-            {"clf__C": [0.1, 1, 10, 100], "clf__gamma": ["scale", 0.01, 0.1]},
+            CalibratedClassifierCV(
+                SVC(kernel="rbf", class_weight="balanced", random_state=SEMILLA),
+                method="sigmoid",
+                cv=3,
+                ensemble=False,
+            ),
+            {"clf__estimator__C": [0.1, 1, 10, 100], "clf__estimator__gamma": ["scale", 0.01, 0.1]},
         ),
         "MLP": (
             MLPClassifier(max_iter=2000, early_stopping=False, random_state=SEMILLA),
@@ -70,18 +86,50 @@ def _pipeline(clf) -> Pipeline:
     return Pipeline([("escalar", StandardScaler()), ("clf", clf)])
 
 
-def _ajustar(clf, rejilla: dict, X: pd.DataFrame, y: np.ndarray, grupos: np.ndarray) -> Pipeline:
-    """Ajusta el modelo; si tiene hiperparámetros, los busca con CV interna por persona."""
+def _validacion_interna() -> StratifiedGroupKFold:
+    return StratifiedGroupKFold(n_splits=PARTICIONES_INTERNAS, shuffle=True, random_state=SEMILLA)
+
+
+def _ajustar(
+    clf, rejilla: dict, X: pd.DataFrame, y: np.ndarray, grupos: np.ndarray
+) -> tuple[Pipeline, float]:
+    """Ajusta el modelo y elige su umbral de decisión usando solo estos datos.
+
+    1. Si el modelo tiene hiperparámetros, los busca con CV interna por persona
+       (optimizando AUC, que no depende del umbral).
+    2. Con la mejor configuración, obtiene probabilidades fuera de partición sobre
+       estos mismos datos (CV interna por persona) y elige el umbral que maximiza
+       la exactitud balanceada.
+    3. Reentrena con todos los datos recibidos.
+    """
     pipe = _pipeline(clone(clf))
-    if not rejilla:
-        return pipe.fit(X, y)
-    interna = StratifiedGroupKFold(n_splits=PARTICIONES_INTERNAS, shuffle=True, random_state=SEMILLA)
-    busqueda = GridSearchCV(pipe, rejilla, cv=interna, scoring="balanced_accuracy", n_jobs=-1)
-    busqueda.fit(X, y, groups=grupos)
-    return busqueda.best_estimator_
+    interna = _validacion_interna()
+    if rejilla:
+        busqueda = GridSearchCV(pipe, rejilla, cv=interna, scoring="roc_auc", n_jobs=-1)
+        busqueda.fit(X, y, groups=grupos)
+        pipe = clone(busqueda.best_estimator_)
+    prob_oof = cross_val_predict(pipe, X, y, groups=grupos, cv=interna, method="predict_proba", n_jobs=-1)
+    umbral = elegir_umbral(y, prob_oof[:, 1])
+    return pipe.fit(X, y), umbral
 
 
-def _metricas(y: np.ndarray, prob: np.ndarray, umbral: float = UMBRAL_DECISION) -> dict[str, float]:
+def elegir_umbral(y: np.ndarray, prob: np.ndarray) -> float:
+    """Umbral que maximiza la exactitud balanceada (índice de Youden).
+
+    Se prueban los puntos medios entre probabilidades consecutivas. En caso de
+    empate se elige el más cercano a 0.5. Si todas las probabilidades son
+    iguales (p. ej. el modelo base), se usa 0.5.
+    """
+    valores = np.unique(prob)
+    if len(valores) < 2 or len(np.unique(y)) < 2:
+        return UMBRAL_POR_DEFECTO
+    candidatos = (valores[:-1] + valores[1:]) / 2
+    puntajes = np.array([balanced_accuracy_score(y, (prob >= u).astype(int)) for u in candidatos])
+    mejores = candidatos[np.isclose(puntajes, puntajes.max())]
+    return float(mejores[np.argmin(np.abs(mejores - UMBRAL_POR_DEFECTO))])
+
+
+def _metricas(y: np.ndarray, prob: np.ndarray, umbral: float = UMBRAL_POR_DEFECTO) -> dict[str, float]:
     pred = (prob >= umbral).astype(int)
     auc = roc_auc_score(y, prob) if len(np.unique(y)) == 2 else np.nan
     return {
@@ -107,33 +155,26 @@ def evaluar(
     predicciones = {}
 
     for nombre_modelo, (clf, rejilla) in modelos().items():
-        prob_total = np.zeros(len(y))
+        pred_total = np.zeros(len(y), dtype=int)
         for k, (tr, te) in enumerate(externa.split(X, y, grupos)):
             if set(grupos[tr]) & set(grupos[te]):
                 raise RuntimeError("Fuga de información: una persona quedó en entrenamiento y prueba")
-            modelo = _ajustar(clf, rejilla, X.iloc[tr], y[tr], grupos[tr])
+            modelo, umbral = _ajustar(clf, rejilla, X.iloc[tr], y[tr], grupos[tr])
             prob = modelo.predict_proba(X.iloc[te])[:, 1]
-            prob_total[te] = prob
-            filas.append(
-                {"modelo": nombre_modelo, "particion": k + 1, "nivel": "grabación", **_metricas(y[te], prob)}
-            )
-            df_te = pd.DataFrame({"g": grupos[te], "y": y[te], "p": prob}).groupby("g").mean()
-            filas.append(
-                {
-                    "modelo": nombre_modelo,
-                    "particion": k + 1,
-                    "nivel": "persona",
-                    **_metricas(df_te["y"].values.astype(int), df_te["p"].values),
-                }
-            )
-        predicciones[nombre_modelo] = prob_total
+            pred_total[te] = (prob >= umbral).astype(int)
+            base = {"modelo": nombre_modelo, "particion": k + 1, "umbral": umbral}
+            filas.append({**base, "nivel": "grabación", **_metricas(y[te], prob, umbral)})
+            persona = pd.DataFrame({"g": grupos[te], "y": y[te], "p": prob}).groupby("g").mean()
+            y_persona = persona["y"].values.astype(int)
+            filas.append({**base, "nivel": "persona", **_metricas(y_persona, persona["p"].values, umbral)})
+        predicciones[nombre_modelo] = pred_total
         print(f"  ✓ {nombre_modelo}")
 
     detalle = pd.DataFrame(filas)
     detalle.to_csv(os.path.join(carpeta_salida, f"{nombre}_detalle_particiones.csv"), index=False)
 
     cols = ["sensibilidad", "especificidad", "f1", "exactitud_balanceada", "auc"]
-    resumen = detalle.groupby(["nivel", "modelo"], sort=False)[cols].agg(["mean", "std"])
+    resumen = detalle.groupby(["nivel", "modelo"], sort=False)[cols + ["umbral"]].agg(["mean", "std"])
     resumen.to_csv(os.path.join(carpeta_salida, f"{nombre}_resumen.csv"))
 
     _tabla_latex(resumen, cols, os.path.join(carpeta_salida, f"{nombre}_tabla.tex"))
@@ -176,8 +217,7 @@ def _tabla_latex(resumen: pd.DataFrame, cols: list[str], ruta: str) -> None:
         f.write("\n".join(lineas) + "\n")
 
 
-def _matriz_confusion(y: np.ndarray, prob: np.ndarray, nombre_modelo: str, ruta: str) -> None:
-    pred = (prob >= UMBRAL_DECISION).astype(int)
+def _matriz_confusion(y: np.ndarray, pred: np.ndarray, nombre_modelo: str, ruta: str) -> None:
     cm = confusion_matrix(y, pred, labels=[0, 1])
     fig, ax = plt.subplots(figsize=(4.2, 3.8))
     pantalla = ConfusionMatrixDisplay(cm, display_labels=["Sano", "Parkinson"])
@@ -202,10 +242,11 @@ def entrenar_final(
 ) -> dict[str, Any]:
     """Entrena el modelo elegido con TODOS los datos y lo guarda para el prototipo."""
     clf, rejilla = modelos()[nombre_modelo]
-    modelo = _ajustar(clf, rejilla, X, y, grupos)
+    modelo, umbral = _ajustar(clf, rejilla, X, y, grupos)
     metricas = resumen.loc[("grabación", nombre_modelo)]
     paquete = {
         "pipeline": modelo,
+        "umbral_decision": umbral,
         "caracteristicas": caracteristicas,
         "modelo": nombre_modelo,
         "dataset": dataset,
