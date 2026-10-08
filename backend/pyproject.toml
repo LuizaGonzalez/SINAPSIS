@@ -1,0 +1,19 @@
+[project]
+name = "sinapsis"
+version = "0.1.0"
+description = "Prototipo académico de tamizaje de alteraciones vocales asociadas a la enfermedad de Parkinson"
+requires-python = ">=3.10"
+
+[tool.ruff]
+line-length = 110
+target-version = "py310"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B", "UP", "N"]
+# X, X_tr, etc. son la convención estándar en aprendizaje automático.
+ignore = ["N803", "N806"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
+filterwarnings = ["ignore::FutureWarning", "ignore::UserWarning"]

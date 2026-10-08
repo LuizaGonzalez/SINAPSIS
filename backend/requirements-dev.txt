@@ -1,0 +1,5 @@
+# Desarrollo (pruebas y estilo)
+pytest>=8
+httpx>=0.27
+soundfile>=0.12
+ruff>=0.6
