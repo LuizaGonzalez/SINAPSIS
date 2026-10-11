@@ -1,15 +1,8 @@
 """
 Crea el manifiesto (CSV) de las vocales /a/ del dataset italiano de Parkinson.
 
-Cada fila es una grabación: ruta del audio, persona (sujeto) y etiqueta
-(1 = Parkinson, 0 = control sano). Lo usa `entrenar_audio.py`.
-
 Se usan los controles mayores y las personas con Parkinson. Los controles jóvenes
 se excluyen para que el modelo no aprenda a distinguir por edad.
-
-Uso:
-    python -m entrenamiento.crear_manifiesto_italiano --raiz "datos/italiano" \
-        --salida datos/manifiesto_italiano.csv
 """
 
 import argparse
@@ -27,7 +20,7 @@ def leer_argumentos() -> argparse.Namespace:
     """
     Lee las opciones escritas en la terminal.
 
-    Retorna: un objeto con la carpeta del dataset (raiz) y el archivo CSV de salida.
+    Retorna: un objeto con la carpeta del dataset y el archivo CSV de salida.
     """
     parser = argparse.ArgumentParser(
         description="Crea el manifiesto de las vocales /a/ del dataset italiano."
@@ -47,7 +40,7 @@ def etiqueta_de(ruta_relativa: str) -> int | None:
         ruta_relativa: ruta del audio respecto a la carpeta principal del dataset.
 
     Retorna: 1 si es de una persona con Parkinson, 0 si es un control sano mayor,
-    o None si el audio no se debe usar (controles jóvenes).
+    o None si el audio no se debe usar.
     """
     texto = ruta_relativa.lower()
     if "young" in texto:
@@ -100,7 +93,7 @@ def armar_manifiesto(filas: list[dict]) -> pd.DataFrame:
     Convierte las filas en una tabla ordenada por etiqueta, persona y ruta.
 
     Parámetros:
-        filas: la lista que entrega buscar_audios().
+        filas: la lista que entrega la función buscar_audios.
 
     Retorna: la tabla del manifiesto (columnas ruta, sujeto y etiqueta).
     """
