@@ -1,8 +1,4 @@
-"""Capa de INFRAESTRUCTURA: acceso al modelo entrenado guardado en disco.
-
-El resto de la aplicación no sabe que el modelo es un Pipeline de scikit-learn
-guardado con joblib: solo usa los métodos de esta clase. Si mañana el modelo se
-guardara en otro formato, solo cambiaría este archivo.
+"""Accede al modelo entrenado guardado en disco.
 """
 
 import logging

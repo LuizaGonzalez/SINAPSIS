@@ -1,9 +1,4 @@
-"""Capa de API: la forma exacta de cada respuesta que devuelve el servidor.
-
-FastAPI usa estas clases para revisar que la respuesta tenga los campos
-correctos y para mostrarlas explicadas en la página /docs. Así el frontend
-sabe exactamente qué datos va a recibir.
-"""
+"""Forma exacta de cada respuesta que devuelve el servidor. """
 
 from typing import Literal
 
@@ -49,7 +44,7 @@ class AnalisisRespuesta(BaseModel):
             r: el resultado que devuelve el servicio de análisis.
 
         Retorna:
-            La misma información, organizada como la espera el frontend.
+            La misma información como la espera el frontend.
         """
         return cls(
             nivel=r.riesgo.nivel,
@@ -66,7 +61,7 @@ class AnalisisRespuesta(BaseModel):
 
 
 class ErrorRespuesta(BaseModel):
-    """Respuesta cuando algo sale mal: un código fijo y un mensaje para el usuario."""
+    """Respuesta cuando algo sale mal: un código y mensaje para el usuario."""
 
     codigo: str
     mensaje: str

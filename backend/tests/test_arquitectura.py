@@ -1,10 +1,5 @@
 """Verifica las reglas del monolito modular: cada capa solo importa de las capas de abajo.
-
-    api  ->  servicios  ->  dominio
-                 \\->  infraestructura  ->  dominio
-
-Si alguien rompe una regla (por ejemplo, importa FastAPI en el dominio), esta
-prueba falla y la CI bloquea el Pull Request.
+Si alguno rompe una regla, esta prueba falla y la CI bloquea el Pull Request.
 """
 
 import ast
@@ -29,6 +24,8 @@ PROHIBIDOS = {
 
 
 def importaciones(archivo: Path) -> set[str]:
+    """Retorna los módulos importados en un archivo .py, donde solo
+    lee el código"""
     arbol = ast.parse(archivo.read_text(encoding="utf-8"))
     nombres = set()
     for nodo in ast.walk(arbol):
@@ -41,6 +38,7 @@ def importaciones(archivo: Path) -> set[str]:
 
 @pytest.mark.parametrize("capa", PROHIBIDOS)
 def test_la_capa_no_importa_capas_superiores_ni_el_framework_web(capa):
+    """Falla si una capa importa algo sin permiso"""
     violaciones = []
     for archivo in (PAQUETE / capa).glob("*.py"):
         for modulo in importaciones(archivo):

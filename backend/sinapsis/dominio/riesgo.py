@@ -1,9 +1,8 @@
-"""
-Capa de DOMINIO: convierte la probabilidad del modelo en un nivel de riesgo y una
+""" Convierte la probabilidad del modelo en un nivel de riesgo y una
 recomendación comprensible para una persona sin formación médica.
 
-Los umbrales son provisionales. Deben ajustarse con la curva ROC obtenida en la
-validación por persona, priorizando la sensibilidad (sección 7 del documento).
+Los umbrales son provisionales, así que deben ajustarse con la curva ROC obtenida en la
+validación por persona, priorizando la sensibilidad.
 """
 
 from dataclasses import dataclass
@@ -45,6 +44,7 @@ class InterpretacionRiesgo:
 
 
 def nivel_para(probabilidad: float) -> NivelRiesgo:
+    """Establece la probabilidad en la que está la persona."""
     if not 0.0 <= probabilidad <= 1.0:
         raise ValueError(f"La probabilidad debe estar entre 0 y 1, se recibió {probabilidad}")
     if probabilidad >= UMBRAL_ALTO:
@@ -55,6 +55,7 @@ def nivel_para(probabilidad: float) -> NivelRiesgo:
 
 
 def interpretar(probabilidad: float) -> InterpretacionRiesgo:
+    """Muestra la recomendación según lo que se interpretó de la probabilidad obtenida."""
     nivel = nivel_para(probabilidad)
     return InterpretacionRiesgo(
         nivel=nivel,

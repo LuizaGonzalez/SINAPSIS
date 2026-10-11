@@ -1,12 +1,10 @@
-"""Errores del dominio.
-
-Las capas internas lanzan estos errores; solo la capa de API los traduce a
-códigos HTTP. Así el dominio no depende de FastAPI.
+""" Son los errores del dominio de modo que las capas internas
+lanzan estos errores pero solo la capa de API los traduce a códigos HTTP.
 """
 
 
 class SinapsisError(Exception):
-    """Error base de la aplicación, con un código estable y un mensaje para el usuario."""
+    """Error base de la aplicación, con un código y un mensaje para el usuario."""
 
     codigo = "error"
 
@@ -30,6 +28,7 @@ class AudioIlegibleError(SinapsisError):
 
 
 class ArchivoDemasiadoGrandeError(SinapsisError):
+    """"El archivo recibido es un audio WAV demasiado grande."""
     codigo = "archivo_grande"
 
 

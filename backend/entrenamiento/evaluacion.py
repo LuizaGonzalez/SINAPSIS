@@ -1,18 +1,5 @@
 """
-Evaluación de modelos con validación cruzada POR PERSONA.
-
-Todas las grabaciones de una misma persona quedan siempre en la misma partición
-(StratifiedGroupKFold). La estandarización, la búsqueda de hiperparámetros y la
-elección del umbral de decisión se hacen DENTRO de cada partición de
-entrenamiento, para evitar fuga de información (Kumar et al., 2026; sección 2.4
-del documento).
-
-Umbral de decisión: con clases desbalanceadas (en UCI el 75 % de las grabaciones
-son de personas con Parkinson) un umbral fijo de 0.5 hace que casi todo se
-clasifique como Parkinson, aunque el modelo ordene bien a las personas (AUC
-alto). Por eso el umbral se elige en cada partición con predicciones fuera de
-partición sobre el conjunto de entrenamiento, maximizando la exactitud
-balanceada, y luego se aplica sin cambios a la partición de prueba.
+Evalua los modelos con validación cruzada por persona.
 """
 
 import json
@@ -53,7 +40,7 @@ UMBRAL_POR_DEFECTO = 0.5
 
 
 def modelos() -> dict[str, tuple[Any, dict[str, list]]]:
-    """Modelos a comparar y su rejilla de hiperparámetros (búsqueda interna)."""
+    """Modelos a comparar y sus hiperparámetros (búsqueda interna)."""
     return {
         "Base (clase mayoritaria)": (DummyClassifier(strategy="most_frequent"), {}),
         "Árbol de decisión": (
@@ -64,8 +51,6 @@ def modelos() -> dict[str, tuple[Any, dict[str, list]]]:
             RandomForestClassifier(n_estimators=300, class_weight="balanced", random_state=SEMILLA),
             {"clf__max_depth": [3, 5, None], "clf__min_samples_leaf": [1, 3, 5]},
         ),
-        # SVC(probability=True) está obsoleto desde scikit-learn 1.9; la calibración
-        # explícita da el mismo resultado (escalado de Platt) y seguirá funcionando.
         "SVM (RBF)": (
             CalibratedClassifierCV(
                 SVC(kernel="rbf", class_weight="balanced", random_state=SEMILLA),
@@ -83,24 +68,26 @@ def modelos() -> dict[str, tuple[Any, dict[str, list]]]:
 
 
 def _pipeline(clf) -> Pipeline:
+    """Conecta los datos iniciales con el modelo final"""
     return Pipeline([("escalar", StandardScaler()), ("clf", clf)])
 
 
 def _validacion_interna() -> StratifiedGroupKFold:
+    """Mantiene la grabación de una misma persona en una misma partición"""
     return StratifiedGroupKFold(n_splits=PARTICIONES_INTERNAS, shuffle=True, random_state=SEMILLA)
 
 
 def _ajustar(
     clf, rejilla: dict, X: pd.DataFrame, y: np.ndarray, grupos: np.ndarray
 ) -> tuple[Pipeline, float]:
-    """Ajusta el modelo y elige su umbral de decisión usando solo estos datos.
+    """Ajusta el modelo y elige su umbral de decisión usando solo los datos validados.
 
-    1. Si el modelo tiene hiperparámetros, los busca con CV interna por persona
-       (optimizando AUC, que no depende del umbral).
-    2. Con la mejor configuración, obtiene probabilidades fuera de partición sobre
-       estos mismos datos (CV interna por persona) y elige el umbral que maximiza
-       la exactitud balanceada.
-    3. Reentrena con todos los datos recibidos.
+    Pasos:
+    1. Busca los mejores hiperparámetros con todas las combinaciones que prueba GridSearchCV usando AUC
+    para ver como el modelo ordena a las personas sin depender de un umbral
+    2. Con la mejor configuración, obtiene probabilidades con los mismos datos por GridSearchCV
+    y elige el umbral que maximiza la exactitud balanceada.
+    3. Reentrena el modelo con los datos recibidos.
     """
     pipe = _pipeline(clone(clf))
     interna = _validacion_interna()
@@ -114,11 +101,11 @@ def _ajustar(
 
 
 def elegir_umbral(y: np.ndarray, prob: np.ndarray) -> float:
-    """Umbral que maximiza la exactitud balanceada (índice de Youden).
+    """Umbral que maximiza la exactitud balanceada.
 
     Se prueban los puntos medios entre probabilidades consecutivas. En caso de
     empate se elige el más cercano a 0.5. Si todas las probabilidades son
-    iguales (p. ej. el modelo base), se usa 0.5.
+    iguales, se usa 0.5.
     """
     valores = np.unique(prob)
     if len(valores) < 2 or len(np.unique(y)) < 2:
@@ -130,6 +117,13 @@ def elegir_umbral(y: np.ndarray, prob: np.ndarray) -> float:
 
 
 def _metricas(y: np.ndarray, prob: np.ndarray, umbral: float = UMBRAL_POR_DEFECTO) -> dict[str, float]:
+    """ Calcula las medidas del modelo y lo compara con la predicción real
+
+    Parámetros:
+    - y: si es persona sana 0, de lo contrario si tiene Parkinson es 1
+    - prob: probabilidad que el modelo le asignó a cada persona de tener Parkinson
+    - umbral: Si la probabilidad lo supera, lo anota como Parkinson, si no, entonces es sano
+    """
     pred = (prob >= umbral).astype(int)
     auc = roc_auc_score(y, prob) if len(np.unique(y)) == 2 else np.nan
     return {
@@ -146,8 +140,8 @@ def evaluar(
 ) -> tuple[pd.DataFrame, str]:
     """Compara los modelos con validación cruzada externa por persona.
 
-    Reporta métricas por grabación y por persona (promediando la probabilidad de
-    todas las grabaciones de cada persona, que es como se usaría en tamizaje).
+    Reporta métricas por grabación y por persona (midiendo la probabilidad de
+    todas las grabaciones de cada persona).
     """
     os.makedirs(carpeta_salida, exist_ok=True)
     externa = StratifiedGroupKFold(n_splits=PARTICIONES_EXTERNAS, shuffle=True, random_state=SEMILLA)
@@ -187,12 +181,17 @@ def evaluar(
 
 
 def _fmt(media: float, desv: float) -> str:
+    """Es para dar formato a la media y la desviación, si no hay un
+    número entonces lo coloca como '-' """
     if np.isnan(media):
         return "--"
     return f"{media:.2f} ± {desv:.2f}"
 
-
 def _tabla_markdown(resumen: pd.DataFrame, cols: list[str], ruta: str) -> None:
+    """ Se usa para dar formato en tabla en Markdown con la siguiente estructura:
+     Filas: combinación de nivel y modelo
+     Columnas:Las métricas del modelo
+     """
     encabezado = ["Nivel", "Modelo", "Sensibilidad", "Especificidad", "F1", "Exact. balanceada", "AUC"]
     lineas = ["| " + " | ".join(encabezado) + " |", "|" + "---|" * len(encabezado)]
     for (nivel, modelo), fila in resumen.iterrows():
@@ -203,6 +202,10 @@ def _tabla_markdown(resumen: pd.DataFrame, cols: list[str], ruta: str) -> None:
 
 
 def _tabla_latex(resumen: pd.DataFrame, cols: list[str], ruta: str) -> None:
+    """ Se usa para dar formato en tabla en Latex con la siguiente estructura:
+     Filas: combinación de nivel y modelo
+     Columnas:Las métricas del modelo
+     """
     lineas = [
         r"\begin{tabular}{|l|c|c|c|c|c|}",
         r"\hline",
@@ -218,6 +221,10 @@ def _tabla_latex(resumen: pd.DataFrame, cols: list[str], ruta: str) -> None:
 
 
 def _matriz_confusion(y: np.ndarray, pred: np.ndarray, nombre_modelo: str, ruta: str) -> None:
+    """ Guarda una imagen en una matriz 2x2 que cuentas aciertos y errores del modelo donde:
+    Filas: persona sana o con Parkinson
+    Columnas: lo que el modelo predijo
+    """
     cm = confusion_matrix(y, pred, labels=[0, 1])
     fig, ax = plt.subplots(figsize=(4.2, 3.8))
     pantalla = ConfusionMatrixDisplay(cm, display_labels=["Sano", "Parkinson"])
@@ -240,7 +247,7 @@ def entrenar_final(
     resumen: pd.DataFrame,
     ruta: str,
 ) -> dict[str, Any]:
-    """Entrena el modelo elegido con TODOS los datos y lo guarda para el prototipo."""
+    """Entrena el modelo elegido con todos los datos y lo guarda para el prototipo."""
     clf, rejilla = modelos()[nombre_modelo]
     modelo, umbral = _ajustar(clf, rejilla, X, y, grupos)
     metricas = resumen.loc[("grabación", nombre_modelo)]

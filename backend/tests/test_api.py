@@ -1,8 +1,4 @@
-"""Pruebas de la API: se llama a los endpoints como lo haría el navegador.
-
-No necesitan un modelo entrenado ni grabaciones reales: usan un modelo de
-prueba y voces sintéticas.
-"""
+"""Pruebas de la API: se llama a los endpoints como lo haría el navegador. """
 
 import io
 

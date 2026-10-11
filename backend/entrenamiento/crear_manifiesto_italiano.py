@@ -1,19 +1,8 @@
 """
-Crea el manifiesto (CSV) de las vocales /a/ del Italian Parkinson's Voice and Speech.
+Crea las tablas usando el dataset Italian Parkinson's Voice and Speech de las vocales /a/.
 
-Uso:
-    python -m entrenamiento.crear_manifiesto_italiano --raiz "datos/italiano" \
-        --salida datos/manifiesto_italiano.csv
-
-Supuestos sobre la estructura del dataset (VERIFICAR al descomprimirlo):
-  - Tres carpetas de grupo cuyo nombre contiene "Young Healthy", "Elderly Healthy"
-    y "Parkinson".
-  - Dentro, una carpeta por persona.
-  - Los archivos de la vocal /a/ sostenida empiezan por "VA" (p. ej. VA1....wav).
-Si la estructura real es distinta, ajusten GRUPOS y PREFIJO_VOCAL_A.
-
-Los controles jóvenes se EXCLUYEN para que el modelo no aprenda a diferenciar
-por edad (sección 7 del documento).
+Aclaración: se excluyen los datos de jóvenes para que el modelo no aprenda a diferenciar por
+edad por ahora.
 """
 
 import argparse
@@ -50,7 +39,7 @@ def main():
             etiqueta = etiqueta_de(relativa)
             if etiqueta is None:
                 continue
-            sujeto = os.path.basename(carpeta)
+            sujeto = os.path.relpath(carpeta, args.raiz)
             filas.append({"ruta": os.path.join(carpeta, archivo), "sujeto": sujeto, "etiqueta": etiqueta})
 
     df = pd.DataFrame(filas).sort_values(["etiqueta", "sujeto", "ruta"])

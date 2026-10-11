@@ -1,16 +1,14 @@
 """Configuración de la aplicación.
-
-Los valores se pueden cambiar sin tocar el código, usando variables de entorno:
-    SINAPSIS_MODELO     dónde está el modelo entrenado (.joblib).
-    SINAPSIS_ORIGENES   desde qué direcciones se permite llamar a la API
-                        (por defecto, el frontend en http://localhost:5173).
+Valores de entorno:
+- SINAPSIS_MODELO: dónde está el modelo entrenado.
+- SINAPSIS_ORIGENES: desde qué rutas se permite llamar a la API.
 """
 
 import os
 from dataclasses import dataclass, field
 from pathlib import Path
 
-# Carpeta backend/, para armar rutas que funcionen sin importar desde dónde se ejecute
+# Armar rutas que funcionen sin importar desde dónde se ejecute
 RAIZ_BACKEND = Path(__file__).resolve().parent.parent
 
 
@@ -20,7 +18,7 @@ class Configuracion:
 
     Atributos:
         ruta_modelo: ubicación del modelo entrenado.
-        origenes_cors: direcciones desde las que el navegador puede llamar a la API.
+        origenes_cors: rutas desde las que el navegador puede llamar a la API.
         tamano_maximo_bytes: tamaño máximo del audio que se acepta (10 MB).
         caracteristicas_destacadas: cuántas medidas de voz inusuales se muestran al usuario.
     """

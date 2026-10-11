@@ -1,4 +1,4 @@
-# Entrenamiento y backend de SINAPSIS (Python 3.10+)
+# Entrenamiento y backend de SINAPSIS
 numpy>=1.26
 pandas>=2.1
 scikit-learn>=1.4

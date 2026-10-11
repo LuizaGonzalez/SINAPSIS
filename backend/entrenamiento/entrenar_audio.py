@@ -1,23 +1,5 @@
 """
-Entrena el modelo del prototipo a partir de audios crudos de la vocal /a/.
-
-Uso:
-    python -m entrenamiento.entrenar_audio --manifiesto datos/manifiesto_italiano.csv \
-        --nombre italiano
-
-El manifiesto es un CSV con tres columnas:
-    ruta      -> ruta al archivo .wav
-    sujeto    -> identificador de la persona (para dividir por persona)
-    etiqueta  -> 1 = Parkinson, 0 = control sano
-
-Este script es independiente del dataset: para cambiar a PC-GITA o NeuroVoz solo
-hay que generar otro manifiesto con las mismas columnas.
-
-Pasos:
-  1. Extrae las características de cada audio con nucleo/caracteristicas.py
-     (el MISMO código que usa el backend del prototipo).
-  2. Compara los modelos con validación cruzada por persona.
-  3. Entrena el mejor modelo con todos los datos y lo guarda en modelos/.
+Entrena el modelo del prototipo a partir de audios de la vocal /a/.
 """
 
 import argparse

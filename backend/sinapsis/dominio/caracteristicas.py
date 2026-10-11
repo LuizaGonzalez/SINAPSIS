@@ -1,18 +1,9 @@
 """
-Extracción de características acústicas de una vocal sostenida /a/.
+Extrae características acústicas de una vocal sostenida /a/.
 
-Capa de DOMINIO: no depende de FastAPI ni de cómo llega el audio.
-
-Este módulo es el ÚNICO lugar donde se calculan las características. Lo usan
-tanto el entrenamiento (entrenamiento/entrenar_audio.py) como el servicio de
-análisis del prototipo (sinapsis/servicios/analisis.py), para garantizar que el
-modelo reciba en producción exactamente el mismo tipo de datos con el que fue
-entrenado.
-
-Se usa Parselmouth (interfaz de Python para Praat). Los nombres de las
-características siguen la nomenclatura del dataset Parkinsons de UCI (Little et
-al., 2009) para facilitar la comparación, pero los valores NO son idénticos a los
-de UCI: ese dataset se calculó con el software MDVP, y aquí se usa Praat.
+Este módulo es el único lugar donde se calculan las características.
+Se usa tanto el entrenamiento como el servicio de análisis del prototipo para garantizar que el
+modelo reciba en producción exactamente el mismo tipo de datos con el que fue entrenado.
 """
 
 from dataclasses import dataclass
@@ -23,7 +14,7 @@ from parselmouth.praat import call
 
 from sinapsis.dominio.errores import AudioInvalidoError
 
-# Rango de frecuencia fundamental usado en la literatura para voz adulta (Hz).
+# Rango de frecuencia usado en la literatura para voz adulta (Hz).
 F0_MIN = 75
 F0_MAX = 500
 
@@ -32,7 +23,7 @@ DURACION_MINIMA_S = 2.0
 FRACCION_SONORA_MINIMA = 0.5
 INTENSIDAD_MINIMA_DB = 45.0
 
-# Orden fijo de las características. El modelo depende de este orden.
+# Orden fijo de las características donde el modelo depende de este orden.
 NOMBRES_CARACTERISTICAS = [
     "MDVP:Fo(Hz)",
     "MDVP:Fhi(Hz)",
@@ -80,7 +71,8 @@ def _preparar(sonido: parselmouth.Sound) -> parselmouth.Sound:
 
 
 def validar(sonido: parselmouth.Sound) -> float:
-    """Verifica duración, intensidad y presencia de voz. Devuelve la fracción sonora."""
+    """Verifica la duración, intensidad y presencia de voz.
+    Devuelve la fracción sonora."""
     if sonido.duration < DURACION_MINIMA_S:
         raise AudioInvalidoError(
             codigo="muy_corto",
@@ -161,5 +153,5 @@ def extraer(sonido: parselmouth.Sound) -> ResultadoExtraccion:
 
 
 def extraer_de_archivo(ruta: str) -> ResultadoExtraccion:
-    """Atajo para el entrenamiento: extrae las características de un archivo .wav."""
+    """Extrae las características de un archivo .wav"""
     return extraer(parselmouth.Sound(ruta))

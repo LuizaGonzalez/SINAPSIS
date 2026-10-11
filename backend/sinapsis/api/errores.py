@@ -1,9 +1,4 @@
-"""Capa de API: convierte los errores de la aplicación en respuestas HTTP.
-
-Las demás capas solo dicen QUÉ salió mal (por ejemplo, "el audio no tiene voz").
-Este archivo es el único que decide qué código HTTP se responde en cada caso.
-Así el dominio no depende de FastAPI.
-"""
+"""Convierte los errores de la aplicación en respuestas HTTP."""
 
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
@@ -16,7 +11,6 @@ from sinapsis.dominio.errores import (
     SinapsisError,
 )
 
-# Qué código HTTP corresponde a cada error. Si aparece uno que no está aquí, se responde 500.
 CODIGOS_HTTP: dict[type[SinapsisError], int] = {
     AudioIlegibleError: 400,
     ArchivoDemasiadoGrandeError: 413,
@@ -26,9 +20,7 @@ CODIGOS_HTTP: dict[type[SinapsisError], int] = {
 
 
 def registrar_manejadores(app: FastAPI) -> None:
-    """Le enseña a la aplicación cómo responder cuando ocurre un error de SINAPSIS.
-
-    Todas las respuestas de error tienen la misma forma: {codigo, mensaje}.
+    """Enseña a la aplicación cómo responder cuando ocurre un error en SINAPSIS.
 
     Parámetros:
         app: la aplicación FastAPI a la que se le agregan los manejadores.

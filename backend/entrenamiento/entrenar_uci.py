@@ -1,22 +1,10 @@
 """
-Experimento de referencia con el dataset Parkinsons de UCI.
+Experimenta con referencias del dataset Parkinsons de UCI.
 
 Prueba varios modelos para ver qué tan bien distinguen entre personas con
 Parkinson y personas sanas, usando las medidas de voz que ya trae el dataset.
 Sirve para tener un punto de comparación antes de entrenar con audios reales.
 
-Cómo ejecutarlo (desde la carpeta backend/):
-    python -m entrenamiento.entrenar_uci --datos datos/uci/parkinsons.data
-
-El archivo parkinsons.data se descarga de:
-    https://archive.ics.uci.edu/dataset/174/parkinsons
-
-Se hacen dos pruebas:
-  - "todas": con las 22 medidas del dataset.
-  - "praat": solo con las 16 medidas que nuestro prototipo también puede calcular.
-Así vemos cuánto se pierde al usar solo lo que el prototipo puede medir.
-
-Los resultados (tablas y gráfica) quedan en la carpeta resultados/uci/.
 """
 
 import argparse
@@ -35,8 +23,8 @@ def leer_argumentos() -> argparse.Namespace:
     """Lee las opciones que se escriben al ejecutar el script.
 
     Retorna:
-        Las dos opciones: dónde está el archivo de datos (datos) y en qué
-        carpeta se guardan los resultados (salida).
+        Las dos opciones: dónde está el archivo de datos y en qué
+        carpeta se guardan los resultados.
     """
     p = argparse.ArgumentParser(description="Experimento de referencia con el dataset UCI Parkinsons")
     p.add_argument("--datos", default="datos/uci/parkinsons.data", help="Ruta al archivo parkinsons.data")
@@ -45,20 +33,17 @@ def leer_argumentos() -> argparse.Namespace:
 
 
 def cargar(ruta: str) -> pd.DataFrame:
-    """Lee el archivo de datos y anota a qué persona pertenece cada grabación.
-
-    Cada persona grabó su voz varias veces. Necesitamos saber de quién es cada
-    grabación para no entrenar y evaluar con la misma persona.
+    """Lee el archivo de datos y anota a qué persona pertenece cada grabación para que el modelo
+    no se entrene con la misma persona.
 
     Parámetros:
-        ruta: ubicación del archivo parkinsons.data.
+        ruta: ubicación del archivo (parkinsons.data).
 
     Retorna:
-        Una tabla con una fila por grabación y una columna nueva, "sujeto",
-        con el código de la persona (por ejemplo "S01").
+        Una tabla con una fila por grabación (phon_R01_SO1_1) y una columna nueva, "sujeto",
+        con el código de la persona (S01).
     """
     df = pd.read_csv(ruta)
-    # El nombre de cada grabación es como "phon_R01_S01_1"; la persona es "S01"
     df["sujeto"] = df["name"].str.split("_").str[2]
     return df
 
@@ -67,10 +52,9 @@ def separar_etiquetas_y_grupos(df: pd.DataFrame) -> tuple[np.ndarray, np.ndarray
     """Saca de la tabla el diagnóstico y la persona de cada grabación.
 
     Parámetros:
-        df: tabla devuelta por cargar().
+        df: tabla devuelta por la función cargar.
 
     Retorna:
-        Dos listas:
         - y: el diagnóstico de cada grabación (1 = Parkinson, 0 = sano).
         - grupos: la persona a la que pertenece cada grabación.
     """
@@ -83,11 +67,11 @@ def describir_dataset(df: pd.DataFrame, y: np.ndarray) -> str:
     """Resume cuántos datos hay, para ver que hay muchas más personas con Parkinson que sanas.
 
     Parámetros:
-        df: tabla devuelta por cargar().
+        df: tabla devuelta por la función cargar.
         y: diagnóstico de cada grabación.
 
     Retorna:
-        Un texto con el número de grabaciones, de personas, de personas con
+        Un texto con el número de grabaciones, cantidad de personas, cantidad de personas con
         Parkinson y el porcentaje de grabaciones con Parkinson.
     """
     personas_pd = df.groupby("sujeto")["status"].first().sum()
@@ -102,10 +86,9 @@ def conjuntos_de_caracteristicas(df: pd.DataFrame) -> dict[str, list[str]]:
     """Define los dos grupos de medidas de voz que se van a comparar.
 
     Parámetros:
-        df: tabla devuelta por cargar().
+        df: tabla devuelta por la función cargar.
 
     Retorna:
-        Los dos grupos, cada uno con su lista de medidas:
         - "todas": todas las medidas del dataset.
         - "praat": solo las que el prototipo puede calcular.
     """
@@ -124,7 +107,7 @@ def evaluar_conjunto(
     """Prueba todos los modelos con un grupo de medidas y muestra los resultados.
 
     Parámetros:
-        df: tabla devuelta por cargar().
+        df: tabla devuelta por la función cargar.
         columnas: medidas de voz que se usan.
         y: diagnóstico de cada grabación.
         grupos: persona de cada grabación.
@@ -143,7 +126,6 @@ def evaluar_conjunto(
 
 
 def main() -> None:
-    """Ejecuta el experimento completo paso a paso."""
     args = leer_argumentos()
     df = cargar(args.datos)
     y, grupos = separar_etiquetas_y_grupos(df)
