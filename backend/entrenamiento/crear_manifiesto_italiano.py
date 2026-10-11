@@ -1,19 +1,15 @@
 """
-Crea el manifiesto (CSV) de las vocales /a/ del Italian Parkinson's Voice and Speech.
+Crea el manifiesto (CSV) de las vocales /a/ del dataset italiano de Parkinson.
+
+Cada fila es una grabación: ruta del audio, persona (sujeto) y etiqueta
+(1 = Parkinson, 0 = control sano). Lo usa `entrenar_audio.py`.
+
+Se usan los controles mayores y las personas con Parkinson. Los controles jóvenes
+se excluyen para que el modelo no aprenda a distinguir por edad.
 
 Uso:
     python -m entrenamiento.crear_manifiesto_italiano --raiz "datos/italiano" \
         --salida datos/manifiesto_italiano.csv
-
-Supuestos sobre la estructura del dataset (VERIFICAR al descomprimirlo):
-  - Tres carpetas de grupo cuyo nombre contiene "Young Healthy", "Elderly Healthy"
-    y "Parkinson".
-  - Dentro, una carpeta por persona.
-  - Los archivos de la vocal /a/ sostenida empiezan por "VA" (p. ej. VA1....wav).
-Si la estructura real es distinta, ajusten GRUPOS y PREFIJO_VOCAL_A.
-
-Los controles jóvenes se EXCLUYEN para que el modelo no aprenda a diferenciar
-por edad (sección 7 del documento).
 """
 
 import argparse
@@ -21,11 +17,38 @@ import os
 
 import pandas as pd
 
-GRUPOS = {"elderly healthy": 0, "parkinson": 1}  # "young healthy" se excluye
+# Palabra que identifica cada grupo en el nombre de su carpeta -> etiqueta.
+# Los controles jóvenes ("young healthy") no están en la lista: se excluyen.
+GRUPOS = {"elderly healthy": 0, "parkinson": 1}
 PREFIJO_VOCAL_A = "VA"
 
 
-def etiqueta_de(ruta_relativa):
+def leer_argumentos() -> argparse.Namespace:
+    """
+    Lee las opciones escritas en la terminal.
+
+    Retorna: un objeto con la carpeta del dataset (raiz) y el archivo CSV de salida.
+    """
+    parser = argparse.ArgumentParser(
+        description="Crea el manifiesto de las vocales /a/ del dataset italiano."
+    )
+    parser.add_argument("--raiz", required=True, help="Carpeta donde está el dataset descomprimido")
+    parser.add_argument(
+        "--salida", default="datos/manifiesto_italiano.csv", help="Archivo CSV que se va a crear"
+    )
+    return parser.parse_args()
+
+
+def etiqueta_de(ruta_relativa: str) -> int | None:
+    """
+    Decide la etiqueta de un audio a partir de su ruta dentro del dataset.
+
+    Parámetros:
+        ruta_relativa: ruta del audio respecto a la carpeta principal del dataset.
+
+    Retorna: 1 si es de una persona con Parkinson, 0 si es un control sano mayor,
+    o None si el audio no se debe usar (controles jóvenes).
+    """
     texto = ruta_relativa.lower()
     if "young" in texto:
         return None
@@ -35,31 +58,88 @@ def etiqueta_de(ruta_relativa):
     return None
 
 
-def main():
-    p = argparse.ArgumentParser()
-    p.add_argument("--raiz", required=True)
-    p.add_argument("--salida", default="datos/manifiesto_italiano.csv")
-    args = p.parse_args()
+def es_vocal_a(nombre_archivo: str) -> bool:
+    """
+    Indica si un archivo es un audio de la vocal /a/ sostenida.
 
+    Parámetros:
+        nombre_archivo: nombre del archivo.
+
+    Retorna: True si es un .wav cuyo nombre empieza por "VA".
+    """
+    return nombre_archivo.lower().endswith(".wav") and nombre_archivo.upper().startswith(PREFIJO_VOCAL_A)
+
+
+def buscar_audios(raiz: str) -> list[dict]:
+    """
+    Recorre el dataset y reúne los audios de la vocal /a/ que se van a usar.
+
+    El identificador de cada persona es la ruta de su carpeta dentro del dataset,
+    así dos personas con el mismo nombre en subcarpetas distintas no se confunden.
+
+    Parámetros:
+        raiz: carpeta principal del dataset.
+
+    Retorna: lista de filas, cada una con las claves ruta, sujeto y etiqueta.
+    """
     filas = []
-    for carpeta, _, archivos in os.walk(args.raiz):
+    for carpeta, _, archivos in os.walk(raiz):
         for archivo in archivos:
-            if not archivo.lower().endswith(".wav") or not archivo.upper().startswith(PREFIJO_VOCAL_A):
+            if not es_vocal_a(archivo):
                 continue
-            relativa = os.path.relpath(os.path.join(carpeta, archivo), args.raiz)
-            etiqueta = etiqueta_de(relativa)
+            ruta = os.path.join(carpeta, archivo)
+            etiqueta = etiqueta_de(os.path.relpath(ruta, raiz))
             if etiqueta is None:
                 continue
-            sujeto = os.path.basename(carpeta)
-            filas.append({"ruta": os.path.join(carpeta, archivo), "sujeto": sujeto, "etiqueta": etiqueta})
+            filas.append({"ruta": ruta, "sujeto": os.path.relpath(carpeta, raiz), "etiqueta": etiqueta})
+    return filas
 
-    df = pd.DataFrame(filas).sort_values(["etiqueta", "sujeto", "ruta"])
-    os.makedirs(os.path.dirname(args.salida) or ".", exist_ok=True)
-    df.to_csv(args.salida, index=False)
+
+def armar_manifiesto(filas: list[dict]) -> pd.DataFrame:
+    """
+    Convierte las filas en una tabla ordenada por etiqueta, persona y ruta.
+
+    Parámetros:
+        filas: la lista que entrega buscar_audios().
+
+    Retorna: la tabla del manifiesto (columnas ruta, sujeto y etiqueta).
+    """
+    return pd.DataFrame(filas).sort_values(["etiqueta", "sujeto", "ruta"])
+
+
+def guardar(manifiesto: pd.DataFrame, salida: str) -> None:
+    """
+    Guarda el manifiesto como archivo CSV, creando la carpeta si no existe.
+
+    Parámetros:
+        manifiesto: la tabla del manifiesto.
+        salida: ruta del archivo CSV que se crea.
+    """
+    os.makedirs(os.path.dirname(salida) or ".", exist_ok=True)
+    manifiesto.to_csv(salida, index=False)
+
+
+def resumir(manifiesto: pd.DataFrame, salida: str) -> None:
+    """
+    Muestra en pantalla cuántas grabaciones y personas quedaron en el manifiesto.
+
+    Parámetros:
+        manifiesto: la tabla del manifiesto.
+        salida: ruta del archivo CSV donde se guardó.
+    """
+    con_parkinson = manifiesto.groupby("sujeto")["etiqueta"].first().sum()
     print(
-        f"{len(df)} grabaciones de {df['sujeto'].nunique()} personas "
-        f"({df.groupby('sujeto')['etiqueta'].first().sum()} con PD) -> {args.salida}"
+        f"{len(manifiesto)} grabaciones de {manifiesto['sujeto'].nunique()} personas "
+        f"({con_parkinson} con PD) -> {salida}"
     )
+
+
+def main() -> None:
+    """Punto de entrada: busca los audios, arma el manifiesto, lo guarda y muestra el resumen."""
+    args = leer_argumentos()
+    manifiesto = armar_manifiesto(buscar_audios(args.raiz))
+    guardar(manifiesto, args.salida)
+    resumir(manifiesto, args.salida)
 
 
 if __name__ == "__main__":
