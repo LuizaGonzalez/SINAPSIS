@@ -1,4 +1,4 @@
-""" Son los errores del dominio de modo que las capas internas
+"""Son los errores del dominio de modo que las capas internas
 lanzan estos errores pero solo la capa de API los traduce a códigos HTTP.
 """
 
@@ -28,7 +28,8 @@ class AudioIlegibleError(SinapsisError):
 
 
 class ArchivoDemasiadoGrandeError(SinapsisError):
-    """"El archivo recibido es un audio WAV demasiado grande."""
+    """El archivo recibido es un audio WAV demasiado grande."""
+
     codigo = "archivo_grande"
 
 

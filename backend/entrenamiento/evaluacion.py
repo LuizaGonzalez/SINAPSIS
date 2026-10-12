@@ -117,7 +117,7 @@ def elegir_umbral(y: np.ndarray, prob: np.ndarray) -> float:
 
 
 def _metricas(y: np.ndarray, prob: np.ndarray, umbral: float = UMBRAL_POR_DEFECTO) -> dict[str, float]:
-    """ Calcula las medidas del modelo y lo compara con la predicción real
+    """Calcula las medidas del modelo y lo compara con la predicción real
 
     Parámetros:
     - y: si es persona sana 0, de lo contrario si tiene Parkinson es 1
@@ -182,15 +182,15 @@ def evaluar(
 
 def _fmt(media: float, desv: float) -> str:
     """Es para dar formato a la media y la desviación, si no hay un
-    número entonces lo coloca como '-' """
+    número entonces lo coloca como '-'"""
     if np.isnan(media):
         return "--"
     return f"{media:.2f} ± {desv:.2f}"
 
 def _tabla_markdown(resumen: pd.DataFrame, cols: list[str], ruta: str) -> None:
-    """ Se usa para dar formato en tabla en Markdown con la siguiente estructura:
+    """Se usa para dar formato en tabla en Markdown con la siguiente estructura:
      Filas: combinación de nivel y modelo
-     Columnas:Las métricas del modelo
+     Columnas: las métricas del modelo
      """
     encabezado = ["Nivel", "Modelo", "Sensibilidad", "Especificidad", "F1", "Exact. balanceada", "AUC"]
     lineas = ["| " + " | ".join(encabezado) + " |", "|" + "---|" * len(encabezado)]
@@ -202,9 +202,9 @@ def _tabla_markdown(resumen: pd.DataFrame, cols: list[str], ruta: str) -> None:
 
 
 def _tabla_latex(resumen: pd.DataFrame, cols: list[str], ruta: str) -> None:
-    """ Se usa para dar formato en tabla en Latex con la siguiente estructura:
+    """Se usa para dar formato en tabla en Latex con la siguiente estructura:
      Filas: combinación de nivel y modelo
-     Columnas:Las métricas del modelo
+     Columnas: las métricas del modelo
      """
     lineas = [
         r"\begin{tabular}{|l|c|c|c|c|c|}",
@@ -221,7 +221,7 @@ def _tabla_latex(resumen: pd.DataFrame, cols: list[str], ruta: str) -> None:
 
 
 def _matriz_confusion(y: np.ndarray, pred: np.ndarray, nombre_modelo: str, ruta: str) -> None:
-    """ Guarda una imagen en una matriz 2x2 que cuentas aciertos y errores del modelo donde:
+    """Guarda una imagen en una matriz 2x2 que cuentas aciertos y errores del modelo donde:
     Filas: persona sana o con Parkinson
     Columnas: lo que el modelo predijo
     """

@@ -1,4 +1,4 @@
-"""Pruebas de la API: se llama a los endpoints como lo haría el navegador. """
+"""Pruebas de la API: se llama a los endpoints como lo haría el navegador."""
 
 import io
 

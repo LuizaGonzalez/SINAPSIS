@@ -1,4 +1,4 @@
-"""Endpoints que el frontend puede llamar. """
+"""Endpoints que el frontend puede llamar."""
 
 from typing import Annotated
 
@@ -20,6 +20,7 @@ ERRORES_DOCUMENTADOS = {
     },
     503: {"model": ErrorRespuesta, "description": "El modelo todavía no está entrenado"},
 }
+
 
 def obtener_repositorio(request: Request) -> RepositorioModelo:
     """Entrega el modelo cargado al iniciar la aplicación.

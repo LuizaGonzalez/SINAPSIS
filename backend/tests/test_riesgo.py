@@ -1,4 +1,5 @@
 """Pruebas de la interpretación del nivel de riesgo."""
+
 import pytest
 
 from sinapsis.dominio.riesgo import UMBRAL_ALTO, UMBRAL_MEDIO, interpretar, nivel_para

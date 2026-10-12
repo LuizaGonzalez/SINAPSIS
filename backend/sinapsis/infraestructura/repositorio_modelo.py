@@ -1,5 +1,4 @@
-"""Accede al modelo entrenado guardado en disco.
-"""
+"""Accede al modelo entrenado guardado en disco."""
 
 import logging
 from pathlib import Path
@@ -10,7 +9,6 @@ import numpy as np
 import pandas as pd
 
 logger = logging.getLogger(__name__)
-
 
 class RepositorioModelo:
     """Guarda el modelo entrenado y responde las preguntas que la aplicación le hace."""
@@ -91,7 +89,6 @@ class RepositorioModelo:
 
         Sirve para mostrarle al usuario qué medidas de su voz son más inusuales.
         No indica cuáles pesaron más en la decisión del modelo.
-
         Parámetros:
             caracteristicas: medidas de voz de la grabación (nombre -> valor).
 

@@ -1,4 +1,4 @@
-""" Convierte la probabilidad del modelo en un nivel de riesgo y una
+"""Convierte la probabilidad del modelo en un nivel de riesgo y una
 recomendación comprensible para una persona sin formación médica.
 
 Los umbrales son provisionales, así que deben ajustarse con la curva ROC obtenida en la
