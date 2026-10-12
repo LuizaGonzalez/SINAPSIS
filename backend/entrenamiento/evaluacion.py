@@ -187,6 +187,7 @@ def _fmt(media: float, desv: float) -> str:
         return "--"
     return f"{media:.2f} ± {desv:.2f}"
 
+
 def _tabla_markdown(resumen: pd.DataFrame, cols: list[str], ruta: str) -> None:
     """Se usa para dar formato en tabla en Markdown con la siguiente estructura:
     Filas: combinación de nivel y modelo
