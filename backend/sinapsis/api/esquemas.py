@@ -1,4 +1,4 @@
-"""Forma exacta de cada respuesta que devuelve el servidor. """
+"""Forma exacta de cada respuesta que devuelve el servidor."""
 
 from typing import Literal
 

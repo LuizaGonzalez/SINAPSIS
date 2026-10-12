@@ -189,9 +189,9 @@ def _fmt(media: float, desv: float) -> str:
 
 def _tabla_markdown(resumen: pd.DataFrame, cols: list[str], ruta: str) -> None:
     """Se usa para dar formato en tabla en Markdown con la siguiente estructura:
-     Filas: combinación de nivel y modelo
-     Columnas: las métricas del modelo
-     """
+    Filas: combinación de nivel y modelo
+    Columnas: las métricas del modelo
+    """
     encabezado = ["Nivel", "Modelo", "Sensibilidad", "Especificidad", "F1", "Exact. balanceada", "AUC"]
     lineas = ["| " + " | ".join(encabezado) + " |", "|" + "---|" * len(encabezado)]
     for (nivel, modelo), fila in resumen.iterrows():
@@ -203,9 +203,9 @@ def _tabla_markdown(resumen: pd.DataFrame, cols: list[str], ruta: str) -> None:
 
 def _tabla_latex(resumen: pd.DataFrame, cols: list[str], ruta: str) -> None:
     """Se usa para dar formato en tabla en Latex con la siguiente estructura:
-     Filas: combinación de nivel y modelo
-     Columnas: las métricas del modelo
-     """
+    Filas: combinación de nivel y modelo
+    Columnas: las métricas del modelo
+    """
     lineas = [
         r"\begin{tabular}{|l|c|c|c|c|c|}",
         r"\hline",

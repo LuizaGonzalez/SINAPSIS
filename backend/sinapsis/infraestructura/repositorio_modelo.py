@@ -10,6 +10,7 @@ import pandas as pd
 
 logger = logging.getLogger(__name__)
 
+
 class RepositorioModelo:
     """Guarda el modelo entrenado y responde las preguntas que la aplicación le hace."""
 
