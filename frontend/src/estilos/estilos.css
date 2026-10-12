@@ -1,0 +1,349 @@
+/*
+ * Estilos de SINAPSIS.
+ *
+ * Los colores y medidas se definen una sola vez como variables (:root) y se
+ * reutilizan en todo el archivo, para que el diseño sea consistente y fácil de cambiar.
+ *
+ * Primero va la versión para celular. Al final, una sección @media cambia la
+ * distribución para pantallas de computador (900 px o más).
+ */
+
+:root {
+  --fondo: #f4f6f2;
+  --verde-claro: #c8dfc5;
+  --verde-suave: #dfeadc;
+  --verde-medio: #6e9b72;
+  --verde-texto: #3a5a42;
+  --oscuro: #2f3d35;
+  --texto: #2f3d35;
+  --texto-sec: #5f6e64;
+  --borde: #d9e4d6;
+  --rojo: #b4442f;
+  --radio: 22px;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: #e7ece4;
+  font-family: 'Nunito', system-ui, sans-serif;
+  color: var(--texto);
+}
+
+button, input { font-family: inherit; }
+
+/* ── Estructura general ─────────────────────────────────────────────────── */
+
+/* En celular el prototipo ocupa el ancho de un teléfono. */
+.marco {
+  max-width: 430px;
+  min-height: 100vh;
+  margin: 0 auto;
+  background: var(--fondo);
+  display: flex;
+  flex-direction: column;
+}
+
+.contenido { flex: 1; padding: 32px 24px 24px; }
+
+h1 { margin: 0; font-size: 26px; font-weight: 800; }
+h2 { margin: 0; font-size: 20px; font-weight: 800; }
+p { margin: 0; line-height: 1.45; }
+
+.pila { display: flex; flex-direction: column; gap: 16px; }
+.pila-corta { gap: 6px; }
+.fila { display: flex; align-items: center; gap: 10px; }
+.fila-separada { justify-content: space-between; align-items: flex-start; }
+.fila-inicio { align-items: flex-start; display: flex; gap: 10px; }
+.fila-inicio svg { flex-shrink: 0; margin-top: 1px; }
+.fila-botones { width: 100%; }
+.fila-botones > * { flex: 1; }
+.columnas { display: flex; flex-direction: column; gap: 16px; }
+
+.secundario { color: var(--texto-sec); font-size: 14px; }
+.centrado { text-align: center; }
+.primera-mayuscula::first-letter { text-transform: uppercase; }
+.sobretitulo { font-size: 12px; font-weight: 800; letter-spacing: 0.08em; color: var(--verde-texto); }
+.sobretitulo.claro { color: var(--verde-claro); }
+.pie { font-size: 12px; color: var(--texto-sec); text-align: center; }
+.pie.izquierda { text-align: left; }
+.error { color: var(--rojo); font-size: 14px; text-align: center; font-weight: 600; }
+
+/* ── Botones y enlaces ──────────────────────────────────────────────────── */
+
+.boton-primario, .boton-secundario {
+  width: 100%; min-height: 52px; border-radius: 16px; font-size: 16px; font-weight: 700;
+  display: flex; align-items: center; justify-content: center; gap: 10px; cursor: pointer;
+}
+.boton-primario { border: none; background: var(--oscuro); color: #fff; }
+.boton-secundario { border: 2px solid var(--oscuro); background: #fff; color: var(--oscuro); }
+button:disabled { opacity: 0.6; cursor: progress; }
+
+.enlace {
+  border: none; background: none; padding: 0 4px; min-height: 44px; cursor: pointer;
+  font-size: 14px; font-weight: 800; color: var(--oscuro); text-decoration: underline; text-underline-offset: 3px;
+  white-space: nowrap;
+}
+
+.boton-redondo {
+  width: 44px; height: 44px; border-radius: 22px; border: none;
+  background: var(--verde-claro); color: var(--oscuro);
+  display: flex; align-items: center; justify-content: center; cursor: pointer;
+}
+.etiqueta-volver { font-size: 15px; font-weight: 600; }
+
+/* ── Formularios ────────────────────────────────────────────────────────── */
+
+.campo { display: flex; flex-direction: column; gap: 6px; font-size: 14px; font-weight: 700; }
+.campo input {
+  min-height: 48px; padding: 0 16px; border-radius: 14px; font-size: 16px;
+  border: 1.5px solid var(--verde-claro); background: #fff; color: var(--texto);
+}
+.campo input:focus { outline: 3px solid var(--verde-claro); border-color: var(--verde-medio); }
+
+.casilla { display: flex; align-items: center; gap: 10px; min-height: 44px; font-size: 14px; color: var(--texto-sec); }
+.campos-pareja { display: flex; flex-direction: column; gap: 16px; }
+.casilla input { width: 20px; height: 20px; accent-color: var(--oscuro); flex-shrink: 0; }
+
+/* ── Inicio de sesión y registro ────────────────────────────────────────── */
+
+.marco-autenticacion { background: #fff; }
+.autenticacion { flex: 1; display: flex; flex-direction: column; }
+.autenticacion-formulario { padding: 8px 24px 32px; }
+
+/* En celular, del panel de marca solo se ve el logo */
+.panel-marca { padding: 40px 24px 16px; display: flex; justify-content: center; }
+.panel-marca-mensaje, .panel-marca-pie { display: none; }
+
+.logo { display: flex; align-items: center; gap: 12px; }
+.logo-icono {
+  width: 52px; height: 52px; border-radius: 16px; background: var(--verde-medio); color: #fff;
+  display: flex; align-items: center; justify-content: center;
+}
+.logo-texto { font-size: 22px; font-weight: 800; letter-spacing: 0.02em; }
+
+/* ── Tarjetas ───────────────────────────────────────────────────────────── */
+
+.tarjeta-verde {
+  background: var(--verde-claro); border-radius: var(--radio); padding: 18px 20px;
+  display: flex; flex-direction: column; gap: 10px;
+}
+.tarjeta-verde ol { margin: 0; padding-left: 20px; display: flex; flex-direction: column; gap: 6px; font-size: 14px; line-height: 1.4; }
+
+.tarjeta-blanca { background: #fff; border: 1px solid var(--borde); border-radius: var(--radio); padding: 20px; }
+
+.tarjeta-accion {
+  border: none; cursor: pointer; background: var(--verde-claro); border-radius: var(--radio);
+  padding: 28px 20px; display: flex; flex-direction: column; align-items: center; gap: 8px; color: var(--texto);
+}
+.icono-circulo {
+  width: 56px; height: 56px; border-radius: 18px; background: var(--verde-medio); color: #fff;
+  display: flex; align-items: center; justify-content: center;
+}
+.titulo-accion { font-size: 20px; font-weight: 800; }
+.boton-falso {
+  margin-top: 6px; padding: 12px 24px; border-radius: 14px; background: var(--oscuro); color: #fff;
+  font-size: 15px; font-weight: 800;
+}
+
+.tarjeta-oscura {
+  background: var(--oscuro); color: #fff; border-radius: var(--radio); padding: 20px;
+  display: flex; flex-direction: column; gap: 12px;
+}
+.probabilidad { font-size: 13px; color: #dbe6d8; }
+
+.nota { background: var(--verde-suave); border-radius: 18px; padding: 14px 16px; font-size: 13px; line-height: 1.45; }
+
+.avatar {
+  width: 40px; height: 40px; border-radius: 20px; flex-shrink: 0; background: var(--oscuro); color: #fff;
+  display: flex; align-items: center; justify-content: center; font-weight: 800; text-transform: uppercase;
+}
+
+/* ── Nivel de riesgo ────────────────────────────────────────────────────── */
+
+.nivel { font-size: 34px; font-weight: 800; }
+.nivel-bajo { color: #9fd3a3; }
+.nivel-medio { color: #f2c46d; }
+.nivel-alto { color: #f39a87; }
+
+.escala { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; }
+.escala span { height: 8px; border-radius: 4px; background: #4f6157; }
+.escala span.marcado { background: var(--verde-claro); }
+.escala-etiquetas { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); font-size: 12px; color: #c9d6c6; }
+.escala-etiquetas span:nth-child(2) { text-align: center; }
+.escala-etiquetas span:nth-child(3) { text-align: right; }
+
+/* Etiqueta del nivel en listas. Siempre lleva texto, el color solo refuerza. */
+.chip { padding: 6px 12px; border-radius: 999px; font-size: 12px; font-weight: 800; white-space: nowrap; }
+.chip-bajo { background: #dcefdc; color: #2f5a35; }
+.chip-medio { background: #f6e3b8; color: #6b4b0f; }
+.chip-alto { background: #f6d2c9; color: #7a2e1f; }
+
+/* Barras del último análisis (probabilidad de cada prueba reciente) */
+.tarjeta-oscura .barras { margin-top: auto; }
+.barras { display: flex; align-items: flex-end; gap: 6px; height: 56px; }
+.barras span { flex: 1; max-width: 32px; border-radius: 6px 6px 2px 2px; background: rgba(200, 223, 197, 0.3); }
+.barras span.actual { background: var(--verde-claro); }
+
+/* ── Historial ──────────────────────────────────────────────────────────── */
+
+.lista-analisis { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 10px; }
+.fila-analisis {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  padding: 14px 16px; border-radius: 16px; background: var(--fondo);
+}
+.fila-analisis-fecha { font-weight: 800; font-size: 15px; }
+.vacio { display: flex; flex-direction: column; align-items: center; gap: 14px; text-align: center; }
+
+/* ── Prueba de voz ──────────────────────────────────────────────────────── */
+
+.grabador {
+  background: #fff; border: 1px solid var(--borde); border-radius: var(--radio); padding: 20px;
+  display: flex; flex-direction: column; align-items: center; gap: 14px;
+}
+.grabador.activo { border: 2px solid var(--oscuro); }
+.estado-grabador { display: flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 700; }
+.punto-rojo { width: 10px; height: 10px; border-radius: 5px; background: var(--rojo); }
+
+.onda { width: 100%; height: 48px; display: flex; align-items: center; justify-content: center; gap: 4px; }
+.onda span { width: 4px; border-radius: 2px; background: #b9cbb5; transition: height 80ms linear; }
+.onda span.viva { background: #3a6b45; }
+
+.progreso { width: 100%; height: 8px; border-radius: 4px; background: #e3ebe0; overflow: hidden; }
+.progreso > div { height: 100%; background: var(--verde-medio); transition: width 100ms linear; }
+
+.contador { background: var(--verde-claro); border-radius: 14px; padding: 5px 14px; font-size: 13px; font-weight: 700; }
+.contador.oscuro { background: var(--oscuro); color: #fff; }
+.reproductor { width: 100%; }
+
+/* ── Resultado ──────────────────────────────────────────────────────────── */
+
+.recomendacion { font-size: 15px; }
+.detalles { background: #fff; border: 1px solid var(--borde); border-radius: 18px; padding: 14px 16px; font-size: 14px; }
+.detalles summary { cursor: pointer; font-weight: 700; }
+.detalles ul { margin: 10px 0 0; padding-left: 18px; display: flex; flex-direction: column; gap: 4px; }
+.guardado { display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 13px; font-weight: 700; color: var(--texto-sec); }
+.icono-check {
+  width: 22px; height: 22px; border-radius: 11px; background: var(--verde-claro); color: var(--oscuro);
+  display: flex; align-items: center; justify-content: center;
+}
+
+/* ── Barra de navegación (abajo en celular) ─────────────────────────────── */
+
+.barra {
+  position: sticky; bottom: 0; height: 68px; background: #fff; border-top: 1px solid #dde5da;
+  display: grid; grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+.barra button {
+  border: none; background: none; cursor: pointer; display: flex; flex-direction: column;
+  align-items: center; justify-content: center; gap: 4px; font-size: 11px; color: var(--texto-sec);
+}
+.barra button.activa { color: #3a6b45; font-weight: 800; }
+.marca, .avatar-barra { display: none; }
+
+/*
+ * Versión para computador (pantallas de 900 px o más).
+ * Mismo contenido que en celular, pero aprovechando el ancho:
+ *   - la barra de navegación pasa arriba, con el nombre de SINAPSIS;
+ *   - las pantallas se dividen en dos columnas;
+ *   - inicio de sesión y registro muestran el panel de marca a la izquierda.
+ */
+@media (min-width: 900px) {
+  body { background: var(--fondo); }
+    .marco { max-width: none; --relleno: clamp(16px, 4vh, 48px); --alto-barra: clamp(60px, 10vh, 76px); }
+  .contenido { width: 100%; max-width: 1080px; margin: 0 auto; padding: var(--relleno) 40px; }
+
+  h1 { font-size: 36px; }
+  h2 { font-size: 24px; }
+  .secundario { font-size: 16px; }
+  .pila { gap: 24px; }
+  .pila-corta { gap: 8px; }
+
+  /* Barra superior */
+  .barra {
+    order: -1; position: sticky; top: 0; bottom: auto; z-index: 1;
+    height: var(--alto-barra); padding: 0 max(40px, calc((100% - 1080px) / 2 + 40px));
+    border-top: none; border-bottom: 1px solid #dde5da;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .marca { display: block; margin-right: auto; font-size: 20px; font-weight: 800; letter-spacing: 0.04em; color: var(--oscuro); }
+  .barra button { flex-direction: row; gap: 8px; font-size: 15px; font-weight: 700; min-height: 44px; padding: 0 18px; border-radius: 14px; }
+  .barra button.activa { background: var(--verde-claro); color: var(--oscuro); }
+  .avatar-barra { display: flex; margin-left: 16px; width: 44px; height: 44px; border-radius: 22px; }
+
+  /* Dos columnas */
+  .columnas { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 32px; align-items: start; }
+  .columnas-iguales { align-items: stretch; }
+  .avatar-encabezado { display: none; }
+
+  /* Inicio de sesión y registro: panel verde a la izquierda y formulario a la derecha */
+  .autenticacion { flex-direction: row; min-height: 100vh; }
+  .panel-marca {
+    width: 40%; max-width: 576px; padding: 72px; background: var(--verde-claro);
+    flex-direction: column; justify-content: space-between;
+  }
+   .marco-autenticacion { height: 100vh; overflow: hidden; }
+   .autenticacion { flex-direction: row; height: 100%; }
+   .panel-marca {
+     width: 40%; max-width: 576px; height: 100%; padding: clamp(32px, 7vh, 72px) clamp(32px, 5vw, 72px);
+     background: var(--verde-claro); flex-direction: column; justify-content: space-between;
+   }
+   .panel-marca-mensaje { display: flex; flex-direction: column; gap: clamp(12px, 2.5vh, 20px); max-width: 400px; }
+   .panel-marca-mensaje h2 { font-size: clamp(32px, 5.5vh, 48px); line-height: 1.1; }
+   .panel-marca-mensaje .secundario { font-size: clamp(15px, 2.2vh, 18px); }
+   .panel-marca-pie { display: flex; align-items: center; gap: 10px; font-weight: 700; }
+
+   /* Si la ventana es muy baja, solo el formulario se desplaza; el panel verde no se mueve */
+   .autenticacion-formulario {
+     flex: 1; height: 100%; overflow-y: auto;
+     display: flex; justify-content: center; padding: clamp(24px, 4vh, 48px);
+   }
+   .autenticacion-formulario > .pila { width: 100%; max-width: 480px; margin: auto 0; gap: clamp(14px, 2.6vh, 24px); }
+   .autenticacion-formulario form.pila { gap: clamp(10px, 1.8vh, 18px); }
+   .autenticacion-formulario h1 { font-size: clamp(28px, 4.4vh, 40px); }
+   .campo { font-size: 15px; }
+   .campo input { min-height: clamp(44px, 5.6vh, 52px); }
+
+   /* En el registro, las dos contraseñas van lado a lado para que el formulario sea más corto */
+   .campos-pareja { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 16px; }
+  .tarjeta-verde { padding: 28px 30px; }
+  .tarjeta-verde ol { font-size: 16px; gap: 10px; }
+  .tarjeta-blanca { padding: 28px 32px; }
+  .tarjeta-accion { padding: 40px 32px; justify-content: center; }
+  .titulo-accion { font-size: 26px; }
+  .tarjeta-oscura { padding: 32px; }
+  .grabador { padding: 28px; }
+  .nivel { font-size: 48px; }
+  .nota, .detalles { font-size: 14px; }
+  .boton-primario, .boton-secundario { min-height: 56px; }
+  .enlace, .chip { font-size: 15px; }
+  .barras { height: 80px; }
+
+  /* El historial reciente del inicio se muestra en tres columnas */
+  .pila > .fila-separada + .lista-analisis { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); }
+
+
+  /*
+   * Inicio: ocupa exactamente el alto de la ventana (menos la barra superior).
+   * Las tarjetas de arriba toman el espacio que sobre, y los tamaños usan
+   * clamp() con vh para compactarse en pantallas bajas y crecer en las altas.
+   * Si la ventana es muy baja, la página se desplaza en vez de cortar contenido.
+   */
+  .inicio-ajustado {
+    min-height: calc(100vh - var(--alto-barra) - 2 * var(--relleno));
+    gap: clamp(10px, 2vh, 24px);
+  }
+  .inicio-ajustado h1 { font-size: clamp(26px, 4.2vh, 36px); }
+  .inicio-ajustado h2 { font-size: clamp(18px, 2.8vh, 24px); }
+  .inicio-ajustado > .columnas { flex: 1; min-height: clamp(160px, 28vh, 320px); gap: clamp(16px, 3vh, 32px); }
+  .inicio-ajustado .tarjeta-oscura,
+  .inicio-ajustado .tarjeta-accion { padding: clamp(14px, 3vh, 36px) clamp(20px, 3vw, 36px); gap: clamp(4px, 1vh, 12px); }
+  .inicio-ajustado .icono-circulo { width: clamp(44px, 6.5vh, 60px); height: clamp(44px, 6.5vh, 60px); }
+  .inicio-ajustado .titulo-accion { font-size: clamp(20px, 3.2vh, 28px); }
+  .inicio-ajustado .barras { height: clamp(36px, 8vh, 96px); }
+  .inicio-ajustado .tarjeta-blanca { padding: clamp(12px, 2.4vh, 28px) 32px; gap: clamp(6px, 1.4vh, 16px); }
+  .inicio-ajustado .fila-analisis { padding: clamp(10px, 1.6vh, 14px) 16px; }
+  .inicio-ajustado .nota { padding: clamp(10px, 1.6vh, 14px) 16px; }
+
+}

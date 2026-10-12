@@ -1,0 +1,38 @@
+{
+  "umbral_decision": 0.5920116788917396,
+  "caracteristicas": [
+    "MDVP:Fo(Hz)",
+    "MDVP:Fhi(Hz)",
+    "MDVP:Flo(Hz)",
+    "MDVP:Jitter(%)",
+    "MDVP:Jitter(Abs)",
+    "MDVP:RAP",
+    "MDVP:PPQ",
+    "Jitter:DDP",
+    "MDVP:Shimmer",
+    "MDVP:Shimmer(dB)",
+    "Shimmer:APQ3",
+    "Shimmer:APQ5",
+    "MDVP:APQ",
+    "Shimmer:DDA",
+    "NHR",
+    "HNR"
+  ],
+  "modelo": "SVM (RBF)",
+  "dataset": "italiano",
+  "metricas_validacion": {
+    "sensibilidad_mean": 0.8587878787878788,
+    "sensibilidad_std": 0.15474734288044598,
+    "especificidad_mean": 0.8699999999999999,
+    "especificidad_std": 0.1396424004376894,
+    "f1_mean": 0.8658669400774663,
+    "f1_std": 0.06565483318421174,
+    "exactitud_balanceada_mean": 0.8643939393939395,
+    "exactitud_balanceada_std": 0.05601964105253378,
+    "auc_mean": 0.9011666666666667,
+    "auc_std": 0.09368905426403284,
+    "umbral_mean": 0.6375317362568804,
+    "umbral_std": 0.06392619514627891
+  },
+  "fecha": "2026-10-11T00:30:31"
+}
